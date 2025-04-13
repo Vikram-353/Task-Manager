@@ -7,6 +7,8 @@
 # from django.contrib import admin  # Import admin here
 from django.contrib import admin  # Import admin here
 from .models import Task
+from django.utils.html import format_html
+
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
