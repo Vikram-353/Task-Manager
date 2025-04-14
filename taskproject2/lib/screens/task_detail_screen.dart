@@ -821,11 +821,13 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:taskproject2/utils/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../models/task_model.dart';
+import '../utils/constants.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final Task task;
@@ -874,7 +876,7 @@ class TaskDetailScreen extends StatelessWidget {
 
   void _openFileUrl(BuildContext context, String url) async {
     // Make sure the URL starts with http or https
-    final fullUrl = url.startsWith('http') ? url : 'http://172.16.2.130:8000/media/files/$url';
+    final fullUrl = url.startsWith('http') ? url : '${baseUrl}/media/files/$url';
 
     final uri = Uri.parse(fullUrl);
     if (await canLaunchUrl(uri)) {

@@ -4,6 +4,7 @@ from .models import Task
 from .serializers import TaskSerializer
 from rest_framework.permissions import IsAuthenticated
 
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -23,3 +24,19 @@ class TaskViewSet(viewsets.ModelViewSet):
         """
         print("PATCH Request Data:", request.data)
         return super().partial_update(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        # Only return tasks for the logged-in user
+        return Task.objects.filter(created_by=self.request.user)
+
+    def perform_create(self, serializer):
+        # Save task with the current user
+        serializer.save(created_by=self.request.user)
+
+    def get_object(self):
+        obj = super().get_object()
+        if obj.created_by != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You do not have permission to access this task.")
+        return obj
+

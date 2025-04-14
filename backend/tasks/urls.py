@@ -27,7 +27,7 @@ from .views import TaskViewSet
 from .views_auth import RegisterView, LoginView, LogoutView
 
 router = DefaultRouter()
-router.register(r'tasks', TaskViewSet,basename='task')
+router.register(r'tasks', TaskViewSet, basename='task')
 
 urlpatterns = [
     path('', include(router.urls)),

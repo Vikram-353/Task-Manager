@@ -17,9 +17,10 @@ from .models import Task
 from django.contrib.auth.models import User
 
 class TaskSerializer(serializers.ModelSerializer):
+    created_by = serializers.ReadOnlyField(source='created_by.username') 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'is_completed', 'due_date', 'priority','file', 'image']  # Include all fields or specify fields that you're updating
+        fields = ['id', 'title', 'description', 'is_completed', 'due_date', 'priority','file', 'image','created_by']  # Include all fields or specify fields that you're updating
 
     def update(self, instance, validated_data):
         # Handle the fields you want to update
