@@ -1,20 +1,9 @@
-# from rest_framework import serializers
-# from .models import Task
 
-# class TaskSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Task
-#         fields = '__all__'
-# from rest_framework import serializers
-# from .models import Task
-
-# class TaskSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Task
-#         fields = ['id', 'title', 'description', 'is_completed', 'due_date', 'priority','file', 'image']
 from rest_framework import serializers
 from .models import Task
 from django.contrib.auth.models import User
+from .models import UserProfile
+
 
 class TaskSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source='created_by.username') 
@@ -58,3 +47,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')  # Don't store confirm password
         user = User.objects.create_user(**validated_data)
         return user
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(source='profile.image', allow_null=True, required=False)
+    phone = serializers.CharField(source='profile.phone', allow_blank=True, required=False)
+    bio = serializers.CharField(source='profile.bio', allow_blank=True, required=False)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'image', 'phone', 'bio']

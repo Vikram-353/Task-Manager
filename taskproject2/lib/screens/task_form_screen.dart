@@ -703,10 +703,10 @@ class TaskFormScreen extends StatefulWidget {
   final Future<bool> Function(Task task, {File? image, File? file}) onSave;
 
   const TaskFormScreen({
-    Key? key,
+    super.key,
     this.task,
     required this.onSave,
-  }) : super(key: key);
+  });
 
   @override
   _TaskFormScreenState createState() => _TaskFormScreenState();

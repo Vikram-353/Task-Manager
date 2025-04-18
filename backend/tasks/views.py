@@ -1,8 +1,17 @@
+from flask import Response
 from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser,JSONParser
 from .models import Task
 from .serializers import TaskSerializer
 from rest_framework.permissions import IsAuthenticated
+from .models import UserProfile
+from firebase_admin import messaging
+from .models import Task, UserProfile
+from datetime import date
+from .serializers import UserProfileSerializer
+from rest_framework.views import APIView
+
+
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -39,4 +48,21 @@ class TaskViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You do not have permission to access this task.")
         return obj
+    
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
 

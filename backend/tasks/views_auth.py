@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticated
 from .serializers import RegisterSerializer
-
+from .models import UserProfile
 from rest_framework.permissions import AllowAny
 
 from django.contrib.auth import authenticate
@@ -56,3 +56,4 @@ class LoginView(APIView):
             return Response({"token": token.key}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        

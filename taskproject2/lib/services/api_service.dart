@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task_model.dart';
 import '../utils/constants.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:async';
 
 
 // Base URLs - Consider using environment variables for different environments
@@ -14,6 +15,8 @@ const String taskUrl = '${baseUrl}/api/tasks/';
 const String loginUrl = '${baseUrl}/api/login/';
 const String registerUrl = '${baseUrl}/api/register/';
 const String logoutUrl = '${baseUrl}/api/logout/';
+const String fcmSendUrl = '${baseUrl}/api/send-notification/';
+
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -52,6 +55,7 @@ class ApiService {
         _token = data['token'];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', _token!);
+        await checkOverdueTasks();
       } else {
         final errorMsg = _parseErrorResponse(response);
         throw Exception('Login failed: $errorMsg');
@@ -61,6 +65,7 @@ class ApiService {
       throw Exception('Network error during login: $e');
     }
   }
+
 
 
   Future<void> register(String username, String password) async {
@@ -153,7 +158,6 @@ class ApiService {
       final request = http.MultipartRequest('POST', uri);
       request.headers['Authorization'] = 'Token $token';
 
-      // Add all task fields
       request.fields.addAll(task.toJson());
 
       // Conditionally add image and file
@@ -175,6 +179,7 @@ class ApiService {
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+      await checkOverdueTasks();
 
       if (response.statusCode == 201) {
         return Task.fromJson(json.decode(response.body));
@@ -238,6 +243,56 @@ class ApiService {
     }
   }
 
+  // Future<Task> updateTaskPartial(int taskId, Map<String, dynamic> updates, {File? image, File? file}) async {
+  //   try {
+  //     final token = await _getToken();
+  //     if (token == null) {
+  //       throw Exception('Not authenticated');
+  //     }
+  //
+  //     final uri = Uri.parse('$taskUrl$taskId/');
+  //     final request = http.MultipartRequest('PATCH', uri);
+  //     request.headers['Authorization'] = 'Token $token';
+  //
+  //     // Add only the fields that need to be updated
+  //     updates.forEach((key, value) {
+  //       if (value != null) {
+  //         request.fields[key] = value.toString();
+  //       }
+  //     });
+  //
+  //     // Conditionally add image and file
+  //     if (image != null && image.existsSync()) {
+  //       request.files.add(await http.MultipartFile.fromPath(
+  //           'image',
+  //           image.path,
+  //           filename: basename(image.path)
+  //       ));
+  //     }
+  //
+  //     if (file != null && file.existsSync()) {
+  //       request.files.add(await http.MultipartFile.fromPath(
+  //           'file',
+  //           file.path,
+  //           filename: basename(file.path)
+  //       ));
+  //     }
+  //
+  //     final streamedResponse = await request.send();
+  //     final response = await http.Response.fromStream(streamedResponse);
+  //
+  //     if (response.statusCode == 200) {
+  //       return Task.fromJson(json.decode(response.body));
+  //     } else {
+  //       final errorMsg = _parseErrorResponse(response);
+  //       throw Exception('Failed to update task: $errorMsg');
+  //     }
+  //   } catch (e) {
+  //     if (e is Exception) rethrow;
+  //     throw Exception('Network error updating task: $e');
+  //   }
+  // }
+
   Future<Task> updateTaskPartial(int taskId, Map<String, dynamic> updates, {File? image, File? file}) async {
     try {
       final token = await _getToken();
@@ -249,27 +304,27 @@ class ApiService {
       final request = http.MultipartRequest('PATCH', uri);
       request.headers['Authorization'] = 'Token $token';
 
-      // Add only the fields that need to be updated
+      // Add only the fields that need to be updated (non-null fields)
       updates.forEach((key, value) {
         if (value != null) {
           request.fields[key] = value.toString();
         }
       });
 
-      // Conditionally add image and file
+      // Conditionally add image and file if provided and changed
       if (image != null && image.existsSync()) {
         request.files.add(await http.MultipartFile.fromPath(
-            'image',
-            image.path,
-            filename: basename(image.path)
+          'image',
+          image.path,
+          filename: basename(image.path),
         ));
       }
 
       if (file != null && file.existsSync()) {
         request.files.add(await http.MultipartFile.fromPath(
-            'file',
-            file.path,
-            filename: basename(file.path)
+          'file',
+          file.path,
+          filename: basename(file.path),
         ));
       }
 
@@ -286,6 +341,14 @@ class ApiService {
       if (e is Exception) rethrow;
       throw Exception('Network error updating task: $e');
     }
+  }
+  void startPeriodicNotifications() {
+    const duration = Duration(seconds: 1);
+
+    // Start periodic checks for overdue tasks
+    Timer.periodic(duration, (timer) {
+      checkOverdueTasks();
+    });
   }
 
   Future<void> checkOverdueTasks() async {
@@ -319,6 +382,7 @@ class ApiService {
       notificationDetails,
     );
   }
+
 
   Future<void> deleteTask(int id) async {
     try {

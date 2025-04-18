@@ -12,19 +12,21 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from the .env file
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!un6kqzi0adgfewt)idezch)7kv41q^oi^i+3@6s-v0yoloe$g'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dummy-default-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 CORS_ALLOWED_ORIGINS = [
@@ -95,9 +97,9 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'task',       # Replace with your DB name
+        'NAME': os.getenv('DB_NAME'),       # Replace with your DB name
         'USER': 'root',       # Replace with your DB user
-        'PASSWORD': 'Viki@890',  # Replace with your DB password
+        'PASSWORD': os.getenv('DB_PASSWORD'), # Replace with your DB password
         'HOST': 'localhost',          # Or your MySQL host
         'PORT': '3306',               # Default MySQL port
     }
